@@ -10,10 +10,12 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasUuids, Notifiable;
 
     protected $table = 'users';
+
+    protected $keyType = 'string';
+    public $incrementing = false;
 
     protected $fillable = [
         'name',
@@ -30,37 +32,25 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'id' => 'string',
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
 
-     public function enrollments()
+    public function enrollments()
     {
         return $this->hasMany(Enrollment::class);
     }
 
-    /**
-     * Relasi: user -> submissions
-     * (murid submit banyak tugas)
-     */
     public function submissions()
     {
         return $this->hasMany(Submission::class);
     }
 
-    /**
-     * Helper: cek apakah user guru
-     */
     public function isTeacher(): bool
     {
         return $this->role === 'teacher';
     }
 
-    /**
-     * Helper: cek apakah user murid
-     */
     public function isStudent(): bool
     {
         return $this->role === 'student';
