@@ -14,6 +14,11 @@ class Classes extends Model
         'status'
     ];
 
+    public function materials()
+    {
+        return $this->hasMany(Material::class);
+    }
+    
     public function enrollments() 
     {
         return $this->hasMany(Enrollment::class);
