@@ -27,6 +27,7 @@ class User extends Authenticatable
 
     protected $hidden = [
         'password',
+        'remember_token'
     ];
 
     protected function casts(): array
@@ -54,5 +55,15 @@ class User extends Authenticatable
     public function isStudent(): bool
     {
         return $this->role === 'student';
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return[]
     }
 }
