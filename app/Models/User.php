@@ -7,10 +7,11 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasUuids, Notifiable;
+    use HasApiTokens, HasUuids, Notifiable;
 
     protected $table = 'users';
 
@@ -44,7 +45,7 @@ class User extends Authenticatable
 
     public function submissions()
     {
-        return $this->hasMany(Submission::class);
+        return $this->hasMany(Submissions::class);
     }
 
     public function isTeacher(): bool
@@ -55,15 +56,5 @@ class User extends Authenticatable
     public function isStudent(): bool
     {
         return $this->role === 'student';
-    }
-
-    public function getJWTIdentifier()
-    {
-        return $this->getKey();
-    }
-
-    public function getJWTCustomClaims()
-    {
-        return[];
     }
 }
