@@ -1,20 +1,45 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\ClassController;
+use App\Http\Controllers\Api\MaterialController;
+use App\Http\Controllers\Api\AssignmentController;
+use App\Http\Controllers\Api\SubmissionController;
+use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\AuthController;
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
 
-// Public routes (tidak perlu token)
-Route::post('/login', [AuthController::class, 'login']);
+// Public routes
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
-// Protected routes (perlu token)
+// Protected routes
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/logout-all', [AuthController::class, 'logoutAll']);
-    Route::get('/me', [AuthController::class, 'me']);
     
-    // Contoh route lain yang memerlukan autentikasi
-    Route::get('/dashboard', function () {
-        return response()->json(['message' => 'Welcome to dashboard']);
-    });
+    // Classes
+    Route::apiResource('classes', ClassController::class)->except(['index', 'show']);
+    Route::get('classes', [ClassController::class, 'index']);
+    Route::get('classes/{id}', [ClassController::class, 'show']);
+    
+    // Materials
+    Route::get('classes/{classId}/materials', [MaterialController::class, 'getByClass']);
+    Route::apiResource('materials', MaterialController::class)->except(['index', 'show']);
+    
+    // Assignments
+    Route::get('classes/{classId}/assignments', [AssignmentController::class, 'getByClass']);
+    Route::apiResource('assignments', AssignmentController::class)->except(['index', 'show']);
+    
+    // Submissions
+    Route::post('submissions', [SubmissionController::class, 'store']);
+    Route::get('assignments/{assignmentId}/submissions', [SubmissionController::class, 'getByAssignment']);
+    Route::get('my-submissions', [SubmissionController::class, 'getMySubmissions']);
+    
+    // Enrollments
+    Route::post('enroll', [EnrollmentController::class, 'enroll']);
+    Route::get('my-classes', [EnrollmentController::class, 'getMyClasses']);
+    Route::delete('enroll/{classId}', [EnrollmentController::class, 'unenroll']);
 });
