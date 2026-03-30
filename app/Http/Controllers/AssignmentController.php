@@ -4,15 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Classes;
-use App\Models\Material;
+use App\Models\Assignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 
-class MaterialController extends Controller
+class AssignmentController extends Controller
 {
     /**
-     * Get materials by class.
+     * Get assignments by class.
      */
     public function getByClass($classId)
     {
@@ -25,18 +25,19 @@ class MaterialController extends Controller
             ], 404);
         }
         
-        $materials = Material::where('class_id', $classId)
-            ->orderBy('created_at', 'desc')
+        $assignments = Assignment::where('class_id', $classId)
+            ->with('submissions')
+            ->orderBy('due_date', 'asc')
             ->get();
         
         return response()->json([
             'status' => 'success',
-            'data' => $materials
+            'data' => $assignments
         ]);
     }
 
     /**
-     * Store a newly created material.
+     * Store a newly created assignment.
      */
     public function store(Request $request)
     {
@@ -44,8 +45,8 @@ class MaterialController extends Controller
             'class_id' => 'required|exists:classes,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'file_path' => 'nullable|string|max:255',
-            'type' => 'nullable|in:file,link,text'
+            'due_date' => 'required|date|after:now',
+            'max_score' => 'nullable|integer|min:0|max:100'
         ]);
         
         if ($validator->fails()) {
@@ -61,52 +62,52 @@ class MaterialController extends Controller
         if ($class->teacher_id !== Auth::id()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized to add materials to this class'
+                'message' => 'Unauthorized to add assignments to this class'
             ], 403);
         }
         
-        $material = Material::create([
+        $assignment = Assignment::create([
             'class_id' => $request->class_id,
             'title' => $request->title,
             'description' => $request->description,
-            'file_path' => $request->file_path,
-            'type' => $request->type ?? 'text'
+            'due_date' => $request->due_date,
+            'max_score' => $request->max_score ?? 100
         ]);
         
         return response()->json([
             'status' => 'success',
-            'data' => $material,
-            'message' => 'Material created successfully'
+            'data' => $assignment,
+            'message' => 'Assignment created successfully'
         ], 201);
     }
 
     /**
-     * Update the specified material.
+     * Update the specified assignment.
      */
     public function update(Request $request, $id)
     {
-        $material = Material::with('class')->find($id);
+        $assignment = Assignment::with('class')->find($id);
         
-        if (!$material) {
+        if (!$assignment) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Material not found'
+                'message' => 'Assignment not found'
             ], 404);
         }
         
         // Check if user is the teacher of the class
-        if ($material->class->teacher_id !== Auth::id()) {
+        if ($assignment->class->teacher_id !== Auth::id()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized to update this material'
+                'message' => 'Unauthorized to update this assignment'
             ], 403);
         }
         
         $validator = Validator::make($request->all(), [
             'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
-            'file_path' => 'nullable|string|max:255',
-            'type' => 'nullable|in:file,link,text'
+            'due_date' => 'sometimes|date|after:now',
+            'max_score' => 'nullable|integer|min:0|max:100'
         ]);
         
         if ($validator->fails()) {
@@ -116,42 +117,42 @@ class MaterialController extends Controller
             ], 422);
         }
         
-        $material->update($request->only(['title', 'description', 'file_path', 'type']));
+        $assignment->update($request->only(['title', 'description', 'due_date', 'max_score']));
         
         return response()->json([
             'status' => 'success',
-            'data' => $material,
-            'message' => 'Material updated successfully'
+            'data' => $assignment,
+            'message' => 'Assignment updated successfully'
         ]);
     }
 
     /**
-     * Remove the specified material.
+     * Remove the specified assignment.
      */
     public function destroy($id)
     {
-        $material = Material::with('class')->find($id);
+        $assignment = Assignment::with('class')->find($id);
         
-        if (!$material) {
+        if (!$assignment) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Material not found'
+                'message' => 'Assignment not found'
             ], 404);
         }
         
         // Check if user is the teacher of the class
-        if ($material->class->teacher_id !== Auth::id()) {
+        if ($assignment->class->teacher_id !== Auth::id()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized to delete this material'
+                'message' => 'Unauthorized to delete this assignment'
             ], 403);
         }
         
-        $material->delete();
+        $assignment->delete();
         
         return response()->json([
             'status' => 'success',
-            'message' => 'Material deleted successfully'
+            'message' => 'Assignment deleted successfully'
         ]);
     }
 }
