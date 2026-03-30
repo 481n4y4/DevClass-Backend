@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-// use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Notifications\Notifiable;
@@ -14,7 +12,6 @@ class User extends Authenticatable
     use HasApiTokens, HasUuids, Notifiable;
 
     protected $table = 'users';
-
     protected $keyType = 'string';
     public $incrementing = false;
 
@@ -31,12 +28,10 @@ class User extends Authenticatable
         'remember_token'
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'password' => 'hashed',
-        ];
-    }
+    protected $casts = [
+        'password' => 'hashed',
+        'email_verified_at' => 'datetime',
+    ];
 
     public function enrollments()
     {
@@ -45,7 +40,7 @@ class User extends Authenticatable
 
     public function submissions()
     {
-        return $this->hasMany(Submissions::class);
+        return $this->hasMany(Submission::class); // Perbaiki ini
     }
 
     public function isTeacher(): bool
@@ -56,5 +51,12 @@ class User extends Authenticatable
     public function isStudent(): bool
     {
         return $this->role === 'student';
+    }
+
+    public function classes()
+    {
+        return $this->belongsToMany(Classes::class, 'enrollments', 'user_id', 'class_id')
+                    ->withPivot('enrolled_at')
+                    ->withTimestamps();
     }
 }

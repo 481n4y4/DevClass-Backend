@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
-class Submissions extends Model
+class Submission extends Model
 {
     use HasUuids;
 
+    protected $table = 'submissions';
     protected $keyType = 'string';
     public $incrementing = false;
 
@@ -16,8 +17,15 @@ class Submissions extends Model
         'assignment_id',
         'user_id',
         'file_path',
+        'notes',
         'score',
         'feedback',
+        'submitted_at'
+    ];
+
+    protected $casts = [
+        'submitted_at' => 'datetime',
+        'score' => 'integer'
     ];
 
     public function assignment()
