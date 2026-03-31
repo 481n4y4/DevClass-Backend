@@ -40,7 +40,7 @@ class User extends Authenticatable
 
     public function submissions()
     {
-        return $this->hasMany(Submission::class); // Perbaiki ini
+        return $this->hasMany(Submission::class);
     }
 
     public function isTeacher(): bool

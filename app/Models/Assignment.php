@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Submission;
 
 class Assignment extends Model
 {
@@ -33,6 +34,6 @@ class Assignment extends Model
 
     public function submissions()
     {
-        return $this->hasMany(Submissions::class);
+        return $this->hasMany(Submission::class);
     }
 }

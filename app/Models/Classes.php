@@ -18,8 +18,8 @@ class Classes extends Model
     {
         return $this->hasMany(Material::class);
     }
-    
-    public function enrollments() 
+
+    public function enrollments()
     {
         return $this->hasMany(Enrollment::class);
     }
@@ -27,5 +27,17 @@ class Classes extends Model
     public function assignments()
     {
         return $this->hasMany(Assignment::class);
+    }
+
+    public function teacher()
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    public function students()
+    {
+        return $this->belongsToMany(User::class, 'enrollments')
+            ->withPivot('enrolled_at')
+            ->withTimestamps();
     }
 }
