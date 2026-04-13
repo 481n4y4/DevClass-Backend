@@ -1,59 +1,195 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📧 1. Setup Mail (Laravel + Gmail SMTP)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Daripada bangun mail server sendiri, cukup:
 
-## About Laravel
+**`.env` Laravel:**
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=your_email@gmail.com
+MAIL_FROM_NAME="DevClass"
+```
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+⚠️ Penting:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* Gunakan **App Password**, bukan password biasa
+* Aktifkan 2FA di Gmail
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+# 🧠 2. Core System Design DevClass (LMS-style)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Karena kamu mau mirip Google Classroom, berarti domain utamanya:
 
-## Laravel Sponsors
+### Entity utama:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+* User (admin, teacher, student)
+* Class
+* Enrollment
+* Material
+* Assignment
+* Submission
+* Grade
+* Announcement
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# 🔥 3. LIST API WAJIB (Clean & Realistic)
 
-## Contributing
+## 🔐 AUTH
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```http
+[ ] POST   /api/register
+[ ] POST   /api/login
+[ ] POST   /api/logout
+[ ] GET    /api/me
+```
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 👤 USER
 
-## Security Vulnerabilities
+```http
+[ ] GET    /api/users
+[ ] GET    /api/users/{id}
+[ ] PUT    /api/users/{id}
+[ ] DELETE /api/users/{id}
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Tambahan:
 
-## License
+* role-based (admin / teacher / student)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 🏫 CLASS
+
+```http
+[ ] GET    /api/classes
+[ ] POST   /api/classes
+[ ] GET    /api/classes/{id}
+[ ] PUT    /api/classes/{id}
+[ ] DELETE /api/classes/{id}
+```
+
+Tambahan:
+
+```http
+[ ] POST   /api/classes/{id}/join   // student join
+[ ] POST   /api/classes/{id}/leave
+```
+
+---
+
+## 👥 ENROLLMENT
+
+(Relasi user ↔ class)
+
+```http
+[ ] GET    /api/classes/{id}/students
+[ ] POST   /api/classes/{id}/students
+[ ] DELETE /api/classes/{id}/students/{user_id}
+```
+
+---
+
+## 📚 MATERIAL (Materi)
+
+```http
+[ ] GET    /api/classes/{id}/materials
+[ ] POST   /api/materials
+[ ] GET    /api/materials/{id}
+[ ] PUT    /api/materials/{id}
+[ ] DELETE /api/materials/{id}
+```
+
+---
+
+## 📝 ASSIGNMENT
+
+```http
+[ ] GET    /api/classes/{id}/assignments
+[ ] POST   /api/assignments
+[ ] GET    /api/assignments/{id}
+[ ] PUT    /api/assignments/{id}
+[ ] DELETE /api/assignments/{id}
+```
+
+---
+
+## 📤 SUBMISSION (Upload via SFTP)
+
+```http
+[ ] POST   /api/assignments/{id}/submit
+[ ] GET    /api/assignments/{id}/submissions
+[ ] GET    /api/submissions/{id}
+```
+
+---
+
+## 🎯 GRADING
+
+```http
+[ ] POST   /api/submissions/{id}/grade
+[ ] GET    /api/submissions/{id}/grade
+```
+
+---
+
+## 📢 ANNOUNCEMENT
+
+```http
+[ ] GET    /api/classes/{id}/announcements
+[ ] POST   /api/announcements
+[ ] DELETE /api/announcements/{id}
+```
+
+---
+
+## 📁 FILE HANDLING (SFTP)
+
+Karena kamu pakai SFTP:
+
+```http
+[ ] POST   /api/upload
+[ ] GET    /api/files/{id}
+[ ] DELETE /api/files/{id}
+```
+
+Laravel bisa pakai:
+
+```php
+Storage::disk('sftp')
+```
+
+---
+
+## 📧 EMAIL (Trigger dari backend)
+
+Tidak perlu API khusus, tapi trigger dari:
+
+* Register → kirim welcome email
+* Assignment → notify student
+* Deadline → reminder
+
+---
+
+# 🧱 4. Struktur Database (Minimal)
+
+Biar API kamu clean:
+
+* users
+* classes
+* enrollments
+* materials
+* assignments
+* submissions
+* grades
+* announcements
+* files
+
