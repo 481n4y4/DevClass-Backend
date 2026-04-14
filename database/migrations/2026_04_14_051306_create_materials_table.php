@@ -12,13 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('materials', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignUuid('class_id')->constrained('classes')->cascadeOnDelete();
-            $table->string('title');
-            $table->text('content');
-            $table->integer('order')->default(1);
+            $table->id();
             $table->timestamps();
-            $table->index(['class_id', 'order']);
         });
     }
 

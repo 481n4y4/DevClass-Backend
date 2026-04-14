@@ -11,16 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('classes', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-
-            $table->string('title');
-            $table->text('desc')->nullable();
-
-            $table->enum('status', ['active', 'inactive'])
-                ->default('active')
-                ->index();
-
+        Schema::create('assignments', function (Blueprint $table) {
+            $table->id();
             $table->timestamps();
         });
     }
@@ -30,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('classes');
+        Schema::dropIfExists('assignments');
     }
 };

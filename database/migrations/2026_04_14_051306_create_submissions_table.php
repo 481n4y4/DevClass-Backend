@@ -12,14 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('submissions', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignUuid('assignment_id')->constrained('assignments')->cascadeOnDelete();
-            $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
-            $table->string('file_path')->nullable();
-            $table->text('note')->nullable();
-            $table->enum('status', ['submitted', 'graded'])->default('submitted');
+            $table->id();
             $table->timestamps();
-            $table->unique(['assignment_id', 'user_id']);
         });
     }
 
