@@ -3,47 +3,41 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\EnrollmentRequest;
+use App\Http\Resources\ClassroomResource;
+use App\Http\Resources\EnrollmentResource;
+use App\Services\EnrollmentService;
 use Illuminate\Http\Request;
 
 class EnrollmentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(private readonly EnrollmentService $enrollments) {}
+
+    public function enroll(EnrollmentRequest $request)
     {
-        //
+        $enrollment = $this->enrollments->enroll(
+            $request->user(),
+            $request->validated()['class_id']
+        );
+
+        return (new EnrollmentResource($enrollment))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function getMyClasses(Request $request)
     {
-        //
+        $classes = $this->enrollments->myClasses($request->user(), $request->query('q'));
+
+        return ClassroomResource::collection($classes);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function unenroll(Request $request, int $classId)
     {
-        //
-    }
+        $this->enrollments->unenroll($request->user(), $classId);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->json([
+            'message' => 'Unenrolled successfully.',
+        ]);
     }
 }

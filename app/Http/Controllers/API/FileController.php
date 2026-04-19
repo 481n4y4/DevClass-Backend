@@ -3,47 +3,31 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Services\FileStorageService;
+use App\Services\MaterialService;
+use App\Services\SubmissionService;
 
 class FileController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(
+        private readonly FileStorageService $storage,
+        private readonly MaterialService $materials,
+        private readonly SubmissionService $submissions
+    ) {}
+
+    public function material(int $id)
     {
-        //
+        $material = $this->materials->findOrFail($id);
+        $this->authorize('view', $material);
+
+        return $this->storage->streamDownload($material->file_path);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function submission(int $id)
     {
-        //
-    }
+        $submission = $this->submissions->findOrFail($id);
+        $this->authorize('view', $submission);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return $this->storage->streamDownload($submission->file_path);
     }
 }

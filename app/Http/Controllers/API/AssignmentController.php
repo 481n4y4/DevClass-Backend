@@ -3,47 +3,38 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\AssignmentStoreRequest;
+use App\Http\Resources\AssignmentResource;
+use App\Models\Assignment;
+use App\Services\AssignmentService;
+use App\Services\ClassroomService;
 
 class AssignmentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(
+        private readonly AssignmentService $assignments,
+        private readonly ClassroomService $classrooms
+    ) {}
+
+    public function getByClass(int $classId)
     {
-        //
+        $classroom = $this->classrooms->findOrFail($classId);
+        $this->authorize('view', $classroom);
+
+        $assignments = $this->assignments->listByClass($classId);
+
+        return AssignmentResource::collection($assignments);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(AssignmentStoreRequest $request)
     {
-        //
-    }
+        $classroom = $this->classrooms->findOrFail($request->validated()['class_id']);
+        $this->authorize('createForClass', [Assignment::class, $classroom]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        $assignment = $this->assignments->create($request->user(), $request->validated());
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return (new AssignmentResource($assignment))
+            ->response()
+            ->setStatusCode(201);
     }
 }

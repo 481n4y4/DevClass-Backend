@@ -3,47 +3,40 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\GradeStoreRequest;
+use App\Http\Resources\GradeResource;
+use App\Models\Grade;
+use App\Services\GradeService;
+use App\Services\SubmissionService;
 use Illuminate\Http\Request;
 
 class GradeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(
+        private readonly GradeService $grades,
+        private readonly SubmissionService $submissions
+    ) {}
+
+    public function store(GradeStoreRequest $request)
     {
-        //
+        $submission = $this->submissions->findOrFail($request->validated()['submission_id']);
+        $this->authorize('createForSubmission', [Grade::class, $submission]);
+
+        $grade = $this->grades->create($request->user(), $request->validated());
+
+        return (new GradeResource($grade->load('grader')))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function getMyGrades(Request $request)
     {
-        //
-    }
+        if (! $request->user()->isStudent()) {
+            abort(403, 'Only students can view their grades.');
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        $grades = $this->grades->listMyGrades($request->user());
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return GradeResource::collection($grades);
     }
 }

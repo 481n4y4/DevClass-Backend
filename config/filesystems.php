@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('FILESYSTEM_DISK', 'local'),
+    'default' => env('FILESYSTEM_DISK', 'sftp'),
 
     /*
     |--------------------------------------------------------------------------
@@ -65,7 +65,9 @@ return [
             'host' => env('SFTP_HOST'),
             'username' => env('SFTP_USERNAME'),
             'password' => env('SFTP_PASSWORD'),
-            'root' => env('SFTP_ROOT'),
+            'port' => env('SFTP_PORT', 22),
+            'root' => env('SFTP_ROOT', '/home/devclass/files'),
+            'timeout' => 30,
         ],
     ],
 

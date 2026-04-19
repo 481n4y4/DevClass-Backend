@@ -3,47 +3,42 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\MaterialStoreRequest;
+use App\Http\Resources\MaterialResource;
+use App\Models\Material;
+use App\Services\ClassroomService;
+use App\Services\MaterialService;
 
 class MaterialController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(
+        private readonly MaterialService $materials,
+        private readonly ClassroomService $classrooms
+    ) {}
+
+    public function getByClass(int $classId)
     {
-        //
+        $classroom = $this->classrooms->findOrFail($classId);
+        $this->authorize('view', $classroom);
+
+        $materials = $this->materials->listByClass($classId);
+
+        return MaterialResource::collection($materials);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(MaterialStoreRequest $request)
     {
-        //
-    }
+        $classroom = $this->classrooms->findOrFail($request->validated()['class_id']);
+        $this->authorize('createForClass', [Material::class, $classroom]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        $material = $this->materials->create(
+            $request->user(),
+            $request->validated(),
+            $request->file('file')
+        );
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return (new MaterialResource($material->load('uploader')))
+            ->response()
+            ->setStatusCode(201);
     }
 }
