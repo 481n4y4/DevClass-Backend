@@ -16,26 +16,26 @@ class EnrollmentService
         private readonly ClassroomRepositoryInterface $classrooms
     ) {}
 
-    public function enroll(User $user, int $classId)
+    public function enroll(User $user, string $classCode)
     {
         if (! $user->isStudent()) {
             throw new AuthorizationException('Only students can enroll.');
         }
 
-        if ($this->enrollments->findByUserAndClass($user->id, $classId)) {
-            throw ValidationException::withMessages([
-                'class_id' => 'Already enrolled in this class.',
-            ]);
-        }
-
-        $classroom = $this->classrooms->findById($classId);
+        $classroom = $this->classrooms->findByCode($classCode);
         if (! $classroom) {
             throw new ModelNotFoundException();
         }
 
+        if ($this->enrollments->findByUserAndClass($user->id, $classroom->id)) {
+            throw ValidationException::withMessages([
+                'class_code' => 'Already enrolled in this class.',
+            ]);
+        }
+
         return $this->enrollments->create([
             'user_id' => $user->id,
-            'class_id' => $classId,
+            'class_id' => $classroom->id,
         ]);
     }
 

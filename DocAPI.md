@@ -154,6 +154,8 @@ Accept: application/json
 }
 ```
 
+Response akan berisi `code` yang bisa dipakai student untuk enroll.
+
 ### Enroll ke Class
 
 - Method: POST
@@ -162,9 +164,11 @@ Accept: application/json
 
 ```json
 {
-    "class_id": 1
+    "class_code": "ABC123"
 }
 ```
+
+Catatan: `class_code` didapat dari response Create Class.
 
 ### Upload Material (Teacher/Admin)
 

@@ -6,6 +6,7 @@ use App\Models\Classroom;
 use App\Models\User;
 use App\Repositories\Contracts\ClassroomRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Str;
 
 class ClassroomService
 {
@@ -45,11 +46,22 @@ class ClassroomService
 
     public function create(User $user, array $data): Classroom
     {
+        $data['code'] = $data['code'] ?? $this->generateUniqueCode();
+
         if ($user->isTeacher()) {
             $data['teacher_id'] = $user->id;
         }
 
         return $this->classrooms->create($data);
+    }
+
+    private function generateUniqueCode(int $length = 6): string
+    {
+        do {
+            $code = strtoupper(Str::random($length));
+        } while ($this->classrooms->query()->where('code', $code)->exists());
+
+        return $code;
     }
 
     public function update(Classroom $classroom, array $data): Classroom

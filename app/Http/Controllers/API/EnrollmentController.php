@@ -17,7 +17,7 @@ class EnrollmentController extends Controller
     {
         $enrollment = $this->enrollments->enroll(
             $request->user(),
-            $request->validated()['class_id']
+            $request->validated()['class_code']
         );
 
         return (new EnrollmentResource($enrollment))

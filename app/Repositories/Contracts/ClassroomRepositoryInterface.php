@@ -11,6 +11,8 @@ interface ClassroomRepositoryInterface
 
     public function findById(int $id): ?Classroom;
 
+    public function findByCode(string $code): ?Classroom;
+
     public function create(array $data): Classroom;
 
     public function update(Classroom $classroom, array $data): Classroom;

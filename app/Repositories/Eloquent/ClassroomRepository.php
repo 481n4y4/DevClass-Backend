@@ -18,6 +18,11 @@ class ClassroomRepository implements ClassroomRepositoryInterface
         return Classroom::find($id);
     }
 
+    public function findByCode(string $code): ?Classroom
+    {
+        return Classroom::where('code', $code)->first();
+    }
+
     public function create(array $data): Classroom
     {
         return Classroom::create($data);
