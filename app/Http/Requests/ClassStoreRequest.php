@@ -16,6 +16,8 @@ class ClassStoreRequest extends FormRequest
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'grade' => ['required', 'in:10,11,12,13'],
+            'name_class' => ['required', 'string', 'max:255'],
             'teacher_id' => ['nullable', 'exists:users,id'],
         ];
 

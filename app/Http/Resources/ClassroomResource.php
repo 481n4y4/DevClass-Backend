@@ -14,6 +14,8 @@ class ClassroomResource extends JsonResource
             'code' => $this->code,
             'name' => $this->name,
             'description' => $this->description,
+            'grade' => $this->grade,
+            'name_class' => $this->name_class,
             'teacher' => new UserResource($this->whenLoaded('teacher')),
             'created_at' => $this->created_at,
         ];

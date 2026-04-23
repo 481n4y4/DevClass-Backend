@@ -16,6 +16,8 @@ class ClassUpdateRequest extends FormRequest
         $rules = [
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string'],
+            'grade' => ['sometimes', 'in:10,11,12,13'],
+            'name_class' => ['sometimes', 'string', 'max:255'],
             'teacher_id' => ['sometimes', 'exists:users,id'],
         ];
 

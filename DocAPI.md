@@ -150,7 +150,9 @@ Accept: application/json
 ```json
 {
     "name": "Backend Laravel",
-    "description": "Kelas Laravel advanced"
+    "description": "Kelas Laravel advanced",
+    "grade": 12,
+    "name_class": "XII SIJA 2"
 }
 ```
 
