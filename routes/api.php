@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Materials
     Route::get('materials', [MaterialController::class, 'index']);
+    Route::get('materials/{id}', [MaterialController::class, 'show']);
     Route::post('materials', [MaterialController::class, 'store']);
     Route::put('materials/{id}', [MaterialController::class, 'update']);
     Route::delete('materials/{id}', [MaterialController::class, 'destroy']);

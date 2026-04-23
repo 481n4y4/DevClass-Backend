@@ -5,9 +5,11 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MaterialStoreRequest;
 use App\Http\Requests\MaterialUpdateRequest;
+use App\Http\Resources\MaterialListResource;
 use App\Http\Resources\MaterialResource;
 use App\Services\MaterialService;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 
 class MaterialController extends Controller
@@ -19,12 +21,42 @@ class MaterialController extends Controller
         try {
             $materials = $this->materials->listForUser($request->user());
 
-            return MaterialResource::collection($materials);
+            return MaterialListResource::collection($materials);
         } catch (\Throwable $exception) {
             Log::error('Failed to list materials.', ['error' => $exception->getMessage()]);
 
             return response()->json([
                 'message' => 'Unable to fetch materials.',
+            ], 500);
+        }
+    }
+
+    public function show(Request $request, int $id)
+    {
+        try {
+            $material = $this->materials->findOrFail($id);
+
+            if ($request->user()->isStudent()) {
+                if (
+                    $material->kelas_target !== $request->user()->kelas
+                    || $material->kelas_index_target !== $request->user()->kelas_index
+                ) {
+                    return response()->json([
+                        'message' => 'You are not allowed to access this material.',
+                    ], 403);
+                }
+            }
+
+            return new MaterialResource($material->load('creator'));
+        } catch (ModelNotFoundException $exception) {
+            return response()->json([
+                'message' => 'Material not found.',
+            ], 404);
+        } catch (\Throwable $exception) {
+            Log::error('Failed to fetch material.', ['error' => $exception->getMessage()]);
+
+            return response()->json([
+                'message' => 'Unable to fetch material.',
             ], 500);
         }
     }
