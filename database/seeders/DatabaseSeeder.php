@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         User::create([
             'nis' => 'teacher@devclass.com',
+            'email' => 'kheiralovedila@gmail.com',
             'name' => 'DevClass Teacher',
             'password' => Hash::make('teacher123'),
             'no_absen' => 0,
@@ -29,6 +30,7 @@ class DatabaseSeeder extends Seeder
 
             User::create([
                 'nis' => $nis,
+                'email' => 'thakeiabinaya@gmail.com',
                 'name' => 'Student ' . ($i + 1),
                 'password' => Hash::make($nis),
                 'no_absen' => $i + 1,

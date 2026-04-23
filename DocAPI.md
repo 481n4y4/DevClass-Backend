@@ -37,6 +37,26 @@ DEVCLASS_MATERIALS_DIR=materials
 DEVCLASS_SUBMISSIONS_DIR=submissions
 DEVCLASS_MAX_UPLOAD_KB=10240
 DEVCLASS_FILES_USE_QUEUE=false
+
+MAIL_MAILER=log
+MAIL_SCHEME=null
+MAIL_HOST=127.0.0.1
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+
+Gmail SMTP example:
+
+MAIL_MAILER=smtp
+MAIL_SCHEME=tls
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your_gmail@gmail.com
+MAIL_PASSWORD=your_app_password
+MAIL_FROM_ADDRESS=your_gmail@gmail.com
+MAIL_FROM_NAME="${APP_NAME}"
 ```
 
 3. Generate app key
@@ -81,6 +101,7 @@ Example response:
     "user": {
         "id": 2,
         "nis": "1001",
+        "email": "email_user@gmail.com",
         "name": "Student 1",
         "no_absen": 1,
         "kelas": "10",
@@ -126,6 +147,7 @@ Accept: application/json
     "user": {
         "id": 2,
         "nis": "1001",
+        "email": "email_user@gmail.com",
         "name": "Student 1",
         "no_absen": 1,
         "kelas": "10",
@@ -155,6 +177,62 @@ Example response:
 }
 ```
 
+### GET /api/me
+
+- Description: Get current user profile.
+- Headers: Authorization: Bearer <token>
+- Request Body: none
+
+Example response:
+
+```json
+{
+    "id": 2,
+    "nis": "1001",
+    "email": "email_user@gmail.com",
+    "name": "Student 1",
+    "no_absen": 1,
+    "kelas": "10",
+    "kelas_index": "2",
+    "role": "student",
+    "created_at": "2026-04-23T10:00:00.000000Z"
+}
+```
+
+### PUT /api/me
+
+- Description: Update current user profile (name/email).
+- Headers: Authorization: Bearer <token>
+- Request Body (JSON):
+
+```json
+{
+    "name": "Nama Baru",
+    "email": "email_user@gmail.com"
+}
+```
+
+- Validation rules:
+    - name: sometimes, string, max:255
+    - email: nullable, email, max:255, unique
+
+### PUT /api/users/{id} (Teacher)
+
+- Description: Update user data (name/email).
+- Headers: Authorization: Bearer <token>
+- Request Body (JSON):
+
+```json
+{
+    "name": "Student Updated",
+    "email": "email_user@gmail.com"
+}
+```
+
+- Validation rules:
+    - name: sometimes, string, max:255
+    - email: nullable, email, max:255, unique
+
 ### GET /api/materials
 
 - Description: Student gets materials for their `kelas` and `kelas_index`. Teacher gets all materials.
@@ -169,22 +247,7 @@ Example response:
         {
             "id": 1,
             "title": "Intro",
-            "content": "Welcome",
-            "file_path": "materials/1/uuid.pdf",
-            "kelas_target": "10",
-            "kelas_index_target": "1",
             "deadline": null,
-            "submission_required": false,
-            "created_by": {
-                "id": 1,
-                "nis": "teacher@devclass.com",
-                "name": "DevClass Teacher",
-                "no_absen": 0,
-                "kelas": "10",
-                "kelas_index": "1",
-                "role": "teacher",
-                "created_at": "2026-04-23T10:00:00.000000Z"
-            },
             "created_at": "2026-04-23T10:00:00.000000Z"
         }
     ]
@@ -367,6 +430,10 @@ Accept: application/json
 
 - Teacher (admin): create, update, delete materials; view submissions
 - Student: list materials for their class group; submit assignments when required
+
+Email notification:
+
+- When teacher creates a material, email is sent to students with matching `kelas_target` and `kelas_index_target`.
 
 ## 7. Dummy Accounts
 

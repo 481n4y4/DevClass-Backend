@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Models\Material;
 use App\Models\User;
+use App\Notifications\MaterialCreatedNotification;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class MaterialService
 {
@@ -55,6 +57,10 @@ class MaterialService
                 $material->update(['file_path' => $path]);
             }
 
+            DB::afterCommit(function () use ($material): void {
+                $this->notifyStudents($material);
+            });
+
             return $material->refresh();
         });
     }
@@ -87,5 +93,21 @@ class MaterialService
     public function delete(Material $material): void
     {
         $material->delete();
+    }
+
+    private function notifyStudents(Material $material): void
+    {
+        $students = User::query()
+            ->where('role', User::ROLE_STUDENT)
+            ->where('kelas', $material->kelas_target)
+            ->where('kelas_index', $material->kelas_index_target)
+            ->whereNotNull('email')
+            ->get();
+
+        if ($students->isEmpty()) {
+            return;
+        }
+
+        Notification::send($students, new MaterialCreatedNotification($material));
     }
 }
