@@ -10,20 +10,28 @@ class Material extends Model
     use HasFactory;
 
     protected $fillable = [
-        'class_id',
         'title',
-        'description',
+        'content',
         'file_path',
-        'uploaded_by',
+        'kelas_target',
+        'kelas_index_target',
+        'deadline',
+        'submission_required',
+        'created_by',
     ];
 
-    public function classroom()
+    protected $casts = [
+        'deadline' => 'datetime',
+        'submission_required' => 'boolean',
+    ];
+
+    public function creator()
     {
-        return $this->belongsTo(Classroom::class, 'class_id');
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function uploader()
+    public function submissions()
     {
-        return $this->belongsTo(User::class, 'uploaded_by');
+        return $this->hasMany(Submission::class, 'material_id');
     }
 }

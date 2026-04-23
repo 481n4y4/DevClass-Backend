@@ -17,7 +17,6 @@ class SubmissionStoreRequest extends FormRequest
         $mimes = implode(',', config('devclass.files.allowed_mimes'));
 
         return [
-            'assignment_id' => ['required', 'exists:assignments,id'],
             'file' => ['required', 'file', 'max:' . $max, 'mimes:' . $mimes],
         ];
     }

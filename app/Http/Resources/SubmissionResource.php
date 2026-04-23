@@ -11,11 +11,10 @@ class SubmissionResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'assignment_id' => $this->assignment_id,
+            'material_id' => $this->material_id,
             'student' => new UserResource($this->whenLoaded('student')),
             'submitted_at' => $this->submitted_at,
-            'file_url' => url('/api/files/submission/' . $this->id),
-            'grade' => new GradeResource($this->whenLoaded('grade')),
+            'file_path' => $this->file_path,
             'created_at' => $this->created_at,
         ];
     }

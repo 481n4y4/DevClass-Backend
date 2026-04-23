@@ -10,12 +10,17 @@ return new class extends Migration
     {
         Schema::create('materials', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('class_id')->constrained('classes')->cascadeOnDelete();
             $table->string('title');
-            $table->text('description')->nullable();
-            $table->string('file_path');
-            $table->foreignId('uploaded_by')->constrained('users')->cascadeOnDelete();
+            $table->text('content')->nullable();
+            $table->string('file_path')->nullable();
+            $table->enum('kelas_target', ['10', '11', '12', '13'])->index();
+            $table->enum('kelas_index_target', ['1', '2', '3'])->index();
+            $table->dateTime('deadline')->nullable();
+            $table->boolean('submission_required')->default(false);
+            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
+
+            $table->index(['kelas_target', 'kelas_index_target']);
         });
     }
 

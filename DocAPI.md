@@ -1,244 +1,379 @@
-# DevClass API - Postman Guide
+# DevClass API Documentation
 
-Dokumen ini menjelaskan cara menggunakan API DevClass di Postman (Laravel Sanctum, token-based).
+## 1. Setup Instructions
 
-## Base URL
+1. Install dependencies
 
-Sesuaikan dengan environment Anda:
+```
+composer install
+```
 
-- Local: http://127.0.0.1:8000/api
-- Prod: https://your-domain.com/api
+2. Configure environment
 
-## Auth Flow (Sanctum Token)
+Copy `.env.example` to `.env` and update these values:
 
-1. Register
+```
+APP_NAME="DevClass API"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://127.0.0.1:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=devclass
+DB_USERNAME=devclassuser
+DB_PASSWORD=secret
+
+FILESYSTEM_DISK=sftp
+SFTP_HOST=127.0.0.1
+SFTP_USERNAME=devclass
+SFTP_PASSWORD=secret
+SFTP_PORT=22
+SFTP_ROOT=/home/devclass/files
+
+DEVCLASS_FILES_DISK=sftp
+DEVCLASS_MATERIALS_DIR=materials
+DEVCLASS_SUBMISSIONS_DIR=submissions
+DEVCLASS_MAX_UPLOAD_KB=10240
+DEVCLASS_FILES_USE_QUEUE=false
+```
+
+3. Generate app key
+
+```
+php artisan key:generate
+```
+
+4. Run migrations and seeders
+
+```
+php artisan migrate --seed
+```
+
+5. Start server
+
+```
+php artisan serve
+```
+
+## 2. Authentication Guide
+
+Login uses `nis` as the username. Default student password is the same as `nis`.
+
+### Login
 
 - Method: POST
-- URL: /register
+- URL: /api/login
 - Body (JSON):
 
 ```json
 {
-    "name": "Teacher One",
-    "email": "teacher1@devclass.test",
-    "password": "password123",
-    "password_confirmation": "password123",
-    "role": "teacher"
+    "nis": "1001",
+    "password": "1001"
 }
 ```
 
-2. Login
-
-- Method: POST
-- URL: /login
-- Body (JSON):
-
-```json
-{
-    "email": "teacher1@devclass.test",
-    "password": "password123"
-}
-```
-
-Response akan berisi token:
+Example response:
 
 ```json
 {
     "user": {
-        "id": 1,
-        "name": "Teacher One",
-        "email": "teacher1@devclass.test",
-        "role": "teacher",
-        "created_at": "2026-04-19T00:00:00.000000Z"
+        "id": 2,
+        "nis": "1001",
+        "name": "Student 1",
+        "no_absen": 1,
+        "kelas": "10",
+        "kelas_index": "2",
+        "role": "student",
+        "created_at": "2026-04-23T10:00:00.000000Z"
     },
     "token": "<your_token_here>"
 }
 ```
 
-3. Set Authorization Header di Postman
-
-- Type: Bearer Token
-- Token: <your_token_here>
-
-Semua endpoint protected membutuhkan header:
+Use the token on protected endpoints:
 
 ```
 Authorization: Bearer <your_token_here>
 Accept: application/json
 ```
 
-4. Logout
+### Logout
 
 - Method: POST
-- URL: /logout
+- URL: /api/logout
 
-5. Get Current User
+## 3. API Endpoints (Detailed)
 
-- Method: GET
-- URL: /me
+### POST /api/login
 
-## Postman Collection Setup
-
-- Buat Environment baru (misal: DevClass Local)
-- Tambahkan variable:
-    - base_url = http://127.0.0.1:8000/api
-    - token = (isi setelah login)
-- Gunakan di request: {{base_url}}/login dan Authorization Bearer {{token}}
-
-## Endpoints
-
-### Auth
-
-- POST /register
-- POST /login
-- POST /logout
-- GET /me
-
-### Classes
-
-- POST /classes
-- GET /classes
-- GET /classes/{id}
-- PUT /classes/{id}
-- DELETE /classes/{id}
-
-### Enrollment
-
-- POST /enroll
-- GET /my-classes
-- DELETE /enroll/{classId}
-
-### Materials
-
-- POST /materials (multipart/form-data, upload ke SFTP)
-- GET /classes/{id}/materials
-
-### Assignments
-
-- POST /assignments
-- GET /classes/{id}/assignments
-
-### Submissions
-
-- POST /submissions (multipart/form-data, upload ke SFTP)
-- GET /assignments/{id}/submissions
-- GET /my-submissions
-
-### Grades
-
-- POST /grades
-- GET /my-grades
-
-### Announcements
-
-- POST /announcements
-- GET /classes/{id}/announcements
-
-### File Access (Proxy)
-
-- GET /files/material/{id}
-- GET /files/submission/{id}
-
-## Request Examples
-
-### Create Class
-
-- Method: POST
-- URL: {{base_url}}/classes
-- Body (JSON):
+- Description: Login with NIS and password.
+- Headers: Accept: application/json
+- Request Body (JSON):
 
 ```json
 {
-    "name": "Backend Laravel",
-    "description": "Kelas Laravel advanced",
-    "grade": 12,
-    "name_class": "XII SIJA 2"
+    "nis": "1001",
+    "password": "1001"
 }
 ```
 
-Response akan berisi `code` yang bisa dipakai student untuk enroll.
-
-### Enroll ke Class
-
-- Method: POST
-- URL: {{base_url}}/enroll
-- Body (JSON):
+- Example response:
 
 ```json
 {
-    "class_code": "ABC123"
+    "user": {
+        "id": 2,
+        "nis": "1001",
+        "name": "Student 1",
+        "no_absen": 1,
+        "kelas": "10",
+        "kelas_index": "2",
+        "role": "student",
+        "created_at": "2026-04-23T10:00:00.000000Z"
+    },
+    "token": "<your_token_here>"
 }
 ```
 
-Catatan: `class_code` didapat dari response Create Class.
+- Validation rules:
+    - nis: required, string
+    - password: required, string
 
-### Upload Material (Teacher/Admin)
+### POST /api/logout
 
-- Method: POST
-- URL: {{base_url}}/materials
-- Body: form-data
-    - class_id: 1
-    - title: "Slide 1"
-    - description: "Intro"
-    - file: (choose file)
+- Description: Revoke current token.
+- Headers: Authorization: Bearer <token>
+- Request Body: none
 
-Allowed mimes: pdf, docx, pptx, jpg, jpeg, png
-Max size: 10MB (default)
-
-### Create Assignment
-
-- Method: POST
-- URL: {{base_url}}/assignments
-- Body (JSON):
+Example response:
 
 ```json
 {
-    "class_id": 1,
-    "title": "Tugas 1",
-    "description": "Buat API sederhana",
-    "deadline": "2026-04-30 23:59:00"
+    "message": "Logged out successfully."
 }
 ```
 
-### Submit Assignment (Student)
+### GET /api/materials
 
-- Method: POST
-- URL: {{base_url}}/submissions
-- Body: form-data
-    - assignment_id: 5
-    - file: (choose file)
+- Description: Student gets materials for their `kelas` and `kelas_index`. Teacher gets all materials.
+- Headers: Authorization: Bearer <token>
+- Request Body: none
 
-### Give Grade (Teacher/Admin)
-
-- Method: POST
-- URL: {{base_url}}/grades
-- Body (JSON):
+Example response:
 
 ```json
 {
-    "submission_id": 12,
-    "score": 90,
-    "feedback": "Good job"
+    "data": [
+        {
+            "id": 1,
+            "title": "Intro",
+            "content": "Welcome",
+            "file_path": "materials/1/uuid.pdf",
+            "kelas_target": "10",
+            "kelas_index_target": "1",
+            "deadline": null,
+            "submission_required": false,
+            "created_by": {
+                "id": 1,
+                "nis": "teacher@devclass.com",
+                "name": "DevClass Teacher",
+                "no_absen": 0,
+                "kelas": "10",
+                "kelas_index": "1",
+                "role": "teacher",
+                "created_at": "2026-04-23T10:00:00.000000Z"
+            },
+            "created_at": "2026-04-23T10:00:00.000000Z"
+        }
+    ]
 }
 ```
 
-### Create Announcement
+- Validation rules: none
 
-- Method: POST
-- URL: {{base_url}}/announcements
-- Body (JSON):
+### POST /api/materials (Teacher)
+
+- Description: Create material with optional file upload.
+- Headers: Authorization: Bearer <token>
+- Request Body: form-data
+    - title (string, required)
+    - content (string, nullable)
+    - kelas_target (enum: 10,11,12,13)
+    - kelas_index_target (enum: 1,2,3)
+    - deadline (datetime, nullable)
+    - submission_required (boolean, nullable)
+    - file (file, nullable)
+
+Example response:
 
 ```json
 {
-    "class_id": 1,
-    "title": "Jadwal berubah",
-    "content": "Pertemuan pindah ke Jumat"
+    "data": {
+        "id": 1,
+        "title": "Intro",
+        "content": "Welcome",
+        "file_path": "materials/1/uuid.pdf",
+        "kelas_target": "10",
+        "kelas_index_target": "1",
+        "deadline": "2026-04-30 23:59:00",
+        "submission_required": true,
+        "created_by": {
+            "id": 1,
+            "nis": "teacher@devclass.com",
+            "name": "DevClass Teacher",
+            "no_absen": 0,
+            "kelas": "10",
+            "kelas_index": "1",
+            "role": "teacher",
+            "created_at": "2026-04-23T10:00:00.000000Z"
+        },
+        "created_at": "2026-04-23T10:00:00.000000Z"
+    }
 }
 ```
 
-## Notes
+- Validation rules:
+    - title: required, string, max:255
+    - content: nullable, string
+    - kelas_target: required, in:10,11,12,13
+    - kelas_index_target: required, in:1,2,3
+    - deadline: nullable, date
+    - submission_required: nullable, boolean
+    - file: nullable, file, mimes: pdf, doc, docx, ppt, pptx, max: DEVCLASS_MAX_UPLOAD_KB
 
-- Semua upload file disimpan ke SFTP, tidak ada local storage.
-- File download harus lewat endpoint /files/\*, tidak expose path langsung.
-- Query search untuk classes dan my-classes: gunakan ?q=keyword
-- Pagination default 15, bisa diubah via DEVCLASS_PER_PAGE
+### PUT /api/materials/{id} (Teacher)
+
+- Description: Update material details or file.
+- Headers: Authorization: Bearer <token>
+- Request Body: form-data (same as POST but all optional)
+
+- Validation rules:
+    - title: sometimes, string, max:255
+    - content: nullable, string
+    - kelas_target: sometimes, in:10,11,12,13
+    - kelas_index_target: sometimes, in:1,2,3
+    - deadline: nullable, date
+    - submission_required: nullable, boolean
+    - file: nullable, file, mimes: pdf, doc, docx, ppt, pptx, max: DEVCLASS_MAX_UPLOAD_KB
+
+### DELETE /api/materials/{id} (Teacher)
+
+- Description: Delete a material.
+- Headers: Authorization: Bearer <token>
+- Request Body: none
+
+Example response:
+
+```json
+{
+    "message": "Material deleted successfully."
+}
+```
+
+### GET /api/materials/{id}/submissions (Teacher)
+
+- Description: List submissions for a material.
+- Headers: Authorization: Bearer <token>
+- Request Body: none
+
+Example response:
+
+```json
+{
+    "data": [
+        {
+            "id": 1,
+            "material_id": 1,
+            "student": {
+                "id": 2,
+                "nis": "1001",
+                "name": "Student 1",
+                "no_absen": 1,
+                "kelas": "10",
+                "kelas_index": "2",
+                "role": "student",
+                "created_at": "2026-04-23T10:00:00.000000Z"
+            },
+            "submitted_at": "2026-04-23T11:00:00.000000Z",
+            "file_path": "submissions/1/2/uuid.pdf",
+            "created_at": "2026-04-23T11:00:00.000000Z"
+        }
+    ]
+}
+```
+
+- Validation rules: none
+
+### POST /api/submit/{material_id} (Student)
+
+- Description: Upload assignment submission for a material.
+- Headers: Authorization: Bearer <token>
+- Request Body: form-data
+    - file (file, required)
+
+Example response:
+
+```json
+{
+    "data": {
+        "id": 1,
+        "material_id": 1,
+        "student": {
+            "id": 2,
+            "nis": "1001",
+            "name": "Student 1",
+            "no_absen": 1,
+            "kelas": "10",
+            "kelas_index": "2",
+            "role": "student",
+            "created_at": "2026-04-23T10:00:00.000000Z"
+        },
+        "submitted_at": "2026-04-23T11:00:00.000000Z",
+        "file_path": "submissions/1/2/uuid.pdf",
+        "created_at": "2026-04-23T11:00:00.000000Z"
+    }
+}
+```
+
+- Validation rules:
+    - file: required, file, mimes: pdf, doc, docx, ppt, pptx, max: DEVCLASS_MAX_UPLOAD_KB
+
+## 4. Testing Guide
+
+Use Postman or Thunder Client:
+
+1. Login using NIS
+2. Copy the `token` from the response
+3. Add header: Authorization: Bearer <token>
+4. Access protected routes
+
+Sample token usage:
+
+```
+Authorization: Bearer <your_token_here>
+Accept: application/json
+```
+
+## 5. File Upload Guide
+
+- Use `multipart/form-data`
+- Field name for file: `file`
+- Supported types: pdf, doc, docx, ppt, pptx
+- Max size: DEVCLASS_MAX_UPLOAD_KB (default 10240 KB)
+
+## 6. Role-based Access Explanation
+
+- Teacher (admin): create, update, delete materials; view submissions
+- Student: list materials for their class group; submit assignments when required
+
+## 7. Dummy Accounts
+
+- Teacher
+    - nis: teacher@devclass.com
+    - password: teacher123
+
+- Student (example)
+    - nis: 1001
+    - password: 1001

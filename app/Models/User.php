@@ -6,19 +6,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    public const ROLE_ADMIN = 'admin';
     public const ROLE_TEACHER = 'teacher';
     public const ROLE_STUDENT = 'student';
 
     protected $fillable = [
+        'nis',
         'name',
-        'email',
         'password',
+        'no_absen',
+        'kelas',
+        'kelas_index',
         'role',
     ];
 
@@ -26,39 +29,23 @@ class User extends Authenticatable
         'password',
     ];
 
-    public function classesTeaching()
-    {
-        return $this->hasMany(Classroom::class, 'teacher_id');
-    }
-
-    public function enrollments()
-    {
-        return $this->hasMany(Enrollment::class);
-    }
-
-    public function enrolledClasses()
-    {
-        return $this->belongsToMany(Classroom::class, 'enrollments', 'user_id', 'class_id');
-    }
-
     public function submissions()
     {
         return $this->hasMany(Submission::class, 'student_id');
     }
 
-    public function gradesGiven()
+    public function materialsCreated()
     {
-        return $this->hasMany(Grade::class, 'graded_by');
+        return $this->hasMany(Material::class, 'created_by');
     }
 
-    public function materialsUploaded()
+    protected static function booted(): void
     {
-        return $this->hasMany(Material::class, 'uploaded_by');
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->role === self::ROLE_ADMIN;
+        static::creating(function (User $user): void {
+            if (! $user->password && $user->nis) {
+                $user->password = Hash::make($user->nis);
+            }
+        });
     }
 
     public function isTeacher(): bool

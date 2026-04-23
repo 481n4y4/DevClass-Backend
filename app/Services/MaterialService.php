@@ -4,30 +4,31 @@ namespace App\Services;
 
 use App\Models\Material;
 use App\Models\User;
-use App\Repositories\Contracts\ClassroomRepositoryInterface;
-use App\Repositories\Contracts\MaterialRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 
 class MaterialService
 {
-    public function __construct(
-        private readonly MaterialRepositoryInterface $materials,
-        private readonly ClassroomRepositoryInterface $classrooms,
-        private readonly FileStorageService $storage
-    ) {}
+    public function __construct(private readonly FileStorageService $storage) {}
 
-    public function listByClass(int $classId)
+    public function listForUser(User $user)
     {
-        return $this->materials
-            ->forClass($classId)
-            ->with('uploader')
+        $query = Material::query()->with('creator');
+
+        if ($user->isStudent()) {
+            $query->where('kelas_target', $user->kelas)
+                ->where('kelas_index_target', $user->kelas_index);
+        }
+
+        return $query
+            ->latest()
             ->paginate((int) config('devclass.pagination.per_page'));
     }
 
     public function findOrFail(int $id): Material
     {
-        $material = $this->materials->findById($id);
+        $material = Material::find($id);
         if (! $material) {
             throw new ModelNotFoundException();
         }
@@ -35,21 +36,56 @@ class MaterialService
         return $material;
     }
 
-    public function create(User $user, array $data, UploadedFile $file): Material
+    public function create(User $user, array $data, ?UploadedFile $file): Material
     {
-        $classroom = $this->classrooms->findById($data['class_id']);
-        if (! $classroom) {
-            throw new ModelNotFoundException();
-        }
+        return DB::transaction(function () use ($user, $data, $file): Material {
+            $material = Material::create([
+                'title' => $data['title'],
+                'content' => $data['content'] ?? null,
+                'file_path' => null,
+                'kelas_target' => $data['kelas_target'],
+                'kelas_index_target' => $data['kelas_index_target'],
+                'deadline' => $data['deadline'] ?? null,
+                'submission_required' => $data['submission_required'] ?? false,
+                'created_by' => $user->id,
+            ]);
 
-        $path = $this->storage->storeMaterial($file, $classroom->id);
+            if ($file) {
+                $path = $this->storage->storeMaterial($file, $material->id);
+                $material->update(['file_path' => $path]);
+            }
 
-        return $this->materials->create([
-            'class_id' => $classroom->id,
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'file_path' => $path,
-            'uploaded_by' => $user->id,
-        ]);
+            return $material->refresh();
+        });
+    }
+
+    public function update(Material $material, array $data, ?UploadedFile $file): Material
+    {
+        return DB::transaction(function () use ($material, $data, $file): Material {
+            $material->fill([
+                'title' => $data['title'] ?? $material->title,
+                'content' => array_key_exists('content', $data) ? $data['content'] : $material->content,
+                'kelas_target' => $data['kelas_target'] ?? $material->kelas_target,
+                'kelas_index_target' => $data['kelas_index_target'] ?? $material->kelas_index_target,
+                'deadline' => array_key_exists('deadline', $data) ? $data['deadline'] : $material->deadline,
+                'submission_required' => array_key_exists('submission_required', $data)
+                    ? (bool) $data['submission_required']
+                    : $material->submission_required,
+            ]);
+
+            if ($file) {
+                $path = $this->storage->storeMaterial($file, $material->id);
+                $material->file_path = $path;
+            }
+
+            $material->save();
+
+            return $material->refresh();
+        });
+    }
+
+    public function delete(Material $material): void
+    {
+        $material->delete();
     }
 }

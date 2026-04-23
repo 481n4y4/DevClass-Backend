@@ -11,11 +11,14 @@ class MaterialResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'class_id' => $this->class_id,
             'title' => $this->title,
-            'description' => $this->description,
-            'uploaded_by' => new UserResource($this->whenLoaded('uploader')),
-            'file_url' => url('/api/files/material/' . $this->id),
+            'content' => $this->content,
+            'file_path' => $this->file_path,
+            'kelas_target' => $this->kelas_target,
+            'kelas_index_target' => $this->kelas_index_target,
+            'deadline' => $this->deadline,
+            'submission_required' => $this->submission_required,
+            'created_by' => new UserResource($this->whenLoaded('creator')),
             'created_at' => $this->created_at,
         ];
     }

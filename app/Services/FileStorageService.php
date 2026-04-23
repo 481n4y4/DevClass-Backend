@@ -24,14 +24,14 @@ class FileStorageService
         $this->useQueue = (bool) config('devclass.files.use_queue');
     }
 
-    public function storeMaterial(UploadedFile $file, int $classId): string
+    public function storeMaterial(UploadedFile $file, int $materialId): string
     {
-        return $this->store($file, $this->materialsDir, $classId);
+        return $this->store($file, $this->materialsDir, [$materialId]);
     }
 
-    public function storeSubmission(UploadedFile $file, int $assignmentId): string
+    public function storeSubmission(UploadedFile $file, int $materialId, int $studentId): string
     {
-        return $this->store($file, $this->submissionsDir, $assignmentId);
+        return $this->store($file, $this->submissionsDir, [$materialId, $studentId]);
     }
 
     public function streamDownload(string $path)
@@ -57,7 +57,7 @@ class FileStorageService
         }, $filename);
     }
 
-    private function store(UploadedFile $file, string $baseDir, int $resourceId): string
+    private function store(UploadedFile $file, string $baseDir, array $segments): string
     {
         $extension = $file->getClientOriginalExtension();
         $filename = (string) Str::uuid();
@@ -66,7 +66,7 @@ class FileStorageService
             $filename .= '.' . $extension;
         }
 
-        $path = $baseDir . '/' . $resourceId . '/' . $filename;
+        $path = $baseDir . '/' . implode('/', $segments) . '/' . $filename;
 
         if ($this->useQueue) {
             StoreSftpFileJob::dispatch($this->disk, $path, $file->get());

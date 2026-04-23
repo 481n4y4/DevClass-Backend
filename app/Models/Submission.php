@@ -10,7 +10,7 @@ class Submission extends Model
     use HasFactory;
 
     protected $fillable = [
-        'assignment_id',
+        'material_id',
         'student_id',
         'file_path',
         'submitted_at',
@@ -20,18 +20,13 @@ class Submission extends Model
         'submitted_at' => 'datetime',
     ];
 
-    public function assignment()
+    public function material()
     {
-        return $this->belongsTo(Assignment::class, 'assignment_id');
+        return $this->belongsTo(Material::class, 'material_id');
     }
 
     public function student()
     {
         return $this->belongsTo(User::class, 'student_id');
-    }
-
-    public function grade()
-    {
-        return $this->hasOne(Grade::class, 'submission_id');
     }
 }

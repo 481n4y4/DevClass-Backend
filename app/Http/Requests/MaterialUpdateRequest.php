@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class MaterialStoreRequest extends FormRequest
+class MaterialUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -17,10 +17,10 @@ class MaterialStoreRequest extends FormRequest
         $mimes = implode(',', config('devclass.files.allowed_mimes'));
 
         return [
-            'title' => ['required', 'string', 'max:255'],
+            'title' => ['sometimes', 'string', 'max:255'],
             'content' => ['nullable', 'string'],
-            'kelas_target' => ['required', 'in:10,11,12,13'],
-            'kelas_index_target' => ['required', 'in:1,2,3'],
+            'kelas_target' => ['sometimes', 'in:10,11,12,13'],
+            'kelas_index_target' => ['sometimes', 'in:1,2,3'],
             'deadline' => ['nullable', 'date'],
             'submission_required' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'max:' . $max, 'mimes:' . $mimes],

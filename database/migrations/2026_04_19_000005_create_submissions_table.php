@@ -10,13 +10,13 @@ return new class extends Migration
     {
         Schema::create('submissions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('assignment_id')->constrained('assignments')->cascadeOnDelete();
+            $table->foreignId('material_id')->constrained('materials')->cascadeOnDelete();
             $table->foreignId('student_id')->constrained('users')->cascadeOnDelete();
             $table->string('file_path');
             $table->dateTime('submitted_at');
             $table->timestamps();
 
-            $table->unique(['assignment_id', 'student_id']);
+            $table->unique(['material_id', 'student_id']);
         });
     }
 

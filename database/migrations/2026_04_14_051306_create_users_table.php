@@ -13,11 +13,16 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->string('nis')->unique();
             $table->string('name');
-            $table->string('email')->unique();
             $table->string('password');
-            $table->enum('role', ['admin', 'teacher', 'student'])->index();
+            $table->unsignedInteger('no_absen');
+            $table->enum('kelas', ['10', '11', '12', '13'])->index();
+            $table->enum('kelas_index', ['1', '2', '3'])->index();
+            $table->enum('role', ['teacher', 'student'])->default('student')->index();
             $table->timestamps();
+
+            $table->index(['kelas', 'kelas_index']);
         });
     }
 
