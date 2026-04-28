@@ -12,6 +12,7 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    public const ROLE_ADMIN = 'admin';
     public const ROLE_TEACHER = 'teacher';
     public const ROLE_STUDENT = 'student';
 
@@ -52,6 +53,16 @@ class User extends Authenticatable
     public function isTeacher(): bool
     {
         return $this->role === self::ROLE_TEACHER;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function canManageUsers(): bool
+    {
+        return $this->isAdmin() || $this->isTeacher();
     }
 
     public function isStudent(): bool
