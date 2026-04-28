@@ -41,6 +41,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Submissions
     Route::post('submit/{materialId}', [SubmissionController::class, 'store']);
     Route::get('materials/{materialId}/submissions', [SubmissionController::class, 'listByMaterial']);
+    Route::post('submissions/{submissionId}/grade', [SubmissionController::class, 'addGrade']);
+    Route::delete('submissions/{submissionId}', [SubmissionController::class, 'deleteSubmission']);
 
     // SFTP download
     Route::get('/download/{path}', function (string $path) {

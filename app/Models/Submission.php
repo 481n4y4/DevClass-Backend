@@ -29,4 +29,9 @@ class Submission extends Model
     {
         return $this->belongsTo(User::class, 'student_id');
     }
+
+    public function grade()
+    {
+        return $this->hasOne(Grade::class, 'submission_id');
+    }
 }

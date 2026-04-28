@@ -67,7 +67,7 @@ class SubmissionService
     public function listByMaterial(int $materialId)
     {
         return Submission::where('material_id', $materialId)
-            ->with(['student'])
+            ->with(['student', 'grade.gradedBy'])
             ->paginate((int) config('devclass.pagination.per_page'));
     }
 

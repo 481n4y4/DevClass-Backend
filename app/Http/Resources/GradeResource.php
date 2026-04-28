@@ -14,8 +14,8 @@ class GradeResource extends JsonResource
             'submission_id' => $this->submission_id,
             'score' => $this->score,
             'feedback' => $this->feedback,
-            'graded_by' => $this->graded_by,
-            'grader' => new UserResource($this->whenLoaded('grader')),
+            'graded_by' => new UserResource($this->whenLoaded('gradedBy')),
+            'graded_at' => $this->graded_at,
             'created_at' => $this->created_at,
         ];
     }

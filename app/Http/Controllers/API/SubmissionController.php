@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SubmissionStoreRequest;
 use App\Http\Resources\SubmissionResource;
+use App\Http\Resources\GradeResource;
 use App\Services\MaterialService;
 use App\Services\SubmissionService;
 use Illuminate\Http\Request;
@@ -66,6 +67,99 @@ class SubmissionController extends Controller
 
             return response()->json([
                 'message' => 'Unable to fetch submissions.',
+            ], 500);
+        }
+    }
+
+    public function addGrade(Request $request, int $submissionId)
+    {
+        if (! $request->user()->isTeacher()) {
+            return response()->json([
+                'message' => 'Only teachers can grade submissions.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'score' => 'required|integer|min:0|max:100',
+            'feedback' => 'nullable|string',
+        ]);
+
+        try {
+            $submission = \App\Models\Submission::with('student', 'material', 'grade')
+                ->findOrFail($submissionId);
+
+            // Check if teacher owns the material
+            if ($submission->material->created_by !== $request->user()->id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You are not the teacher of this material.',
+                ], 403);
+            }
+
+            // Update or create grade
+            $grade = \App\Models\Grade::updateOrCreate(
+                ['submission_id' => $submissionId],
+                [
+                    'score' => $validated['score'],
+                    'feedback' => $validated['feedback'],
+                    'graded_by' => $request->user()->id,
+                    'graded_at' => now(),
+                ]
+            );
+
+            return (new GradeResource($grade->load('gradedBy')))
+                ->response()
+                ->setStatusCode(201);
+        } catch (\Throwable $exception) {
+            Log::error('Failed to add grade.', ['error' => $exception->getMessage()]);
+
+            return response()->json([
+                'message' => 'Unable to add grade.',
+            ], 500);
+        }
+    }
+
+    public function deleteSubmission(Request $request, int $submissionId)
+    {
+        try {
+            $submission = \App\Models\Submission::with('grade')->findOrFail($submissionId);
+
+            // Check if student owns submission or teacher owns material
+            $isStudent = $request->user()->isStudent() && $submission->student_id === $request->user()->id;
+            $isMaterialTeacher = $request->user()->isTeacher() &&
+                $submission->material->created_by === $request->user()->id;
+
+            if (!$isStudent && !$isMaterialTeacher) {
+                return response()->json([
+                    'message' => 'Unauthorized.',
+                ], 403);
+            }
+
+            // Student cannot delete if already graded
+            if ($isStudent && $submission->grade) {
+                return response()->json([
+                    'message' => 'Cannot delete submission that has been graded.',
+                ], 422);
+            }
+
+            // Delete file from storage
+            if ($submission->file_path) {
+                try {
+                    \Illuminate\Support\Facades\Storage::disk('sftp')->delete($submission->file_path);
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to delete file from storage', ['file' => $submission->file_path]);
+                }
+            }
+
+            $submission->delete();
+
+            return response()->json([
+                'message' => 'Submission deleted successfully.',
+            ]);
+        } catch (\Throwable $exception) {
+            Log::error('Failed to delete submission.', ['error' => $exception->getMessage()]);
+
+            return response()->json([
+                'message' => 'Unable to delete submission.',
             ], 500);
         }
     }

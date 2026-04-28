@@ -15,6 +15,7 @@ class SubmissionResource extends JsonResource
             'student' => new UserResource($this->whenLoaded('student')),
             'submitted_at' => $this->submitted_at,
             'file_path' => $this->file_path,
+            'grade' => new GradeResource($this->whenLoaded('grade')),
             'created_at' => $this->created_at,
         ];
     }
