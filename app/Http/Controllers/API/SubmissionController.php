@@ -8,8 +8,11 @@ use App\Http\Resources\SubmissionResource;
 use App\Http\Resources\GradeResource;
 use App\Services\MaterialService;
 use App\Services\SubmissionService;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class SubmissionController extends Controller
 {
@@ -40,11 +43,52 @@ class SubmissionController extends Controller
             return (new SubmissionResource($submission->load('student')))
                 ->response()
                 ->setStatusCode(201);
+        } catch (ValidationException $exception) {
+            Log::warning('Validation failed during submission.', ['errors' => $exception->errors()]);
+            return response()->json([
+                'message' => 'Submission validation failed.',
+                'errors' => $exception->errors(),
+            ], 422);
+        } catch (AuthorizationException $exception) {
+            Log::warning('Unauthorized submission attempt.', ['error' => $exception->getMessage()]);
+            return response()->json([
+                'message' => $exception->getMessage() ?: 'Unauthorized.',
+            ], 403);
+        } catch (ModelNotFoundException $exception) {
+            Log::warning('Material not found for submission.', ['error' => $exception->getMessage()]);
+            return response()->json([
+                'message' => 'Material not found.',
+            ], 404);
         } catch (\Throwable $exception) {
             Log::error('Failed to submit assignment.', ['error' => $exception->getMessage()]);
 
             return response()->json([
                 'message' => 'Unable to submit assignment.',
+            ], 500);
+        }
+    }
+
+    public function mySubmission(Request $request, int $materialId)
+    {
+        if (! $request->user()->isStudent()) {
+            return response()->json([
+                'message' => 'Only students can access their submission.',
+            ], 403);
+        }
+
+        try {
+            $submission = $this->submissions->findMySubmission($request->user(), $materialId);
+
+            return response()->json([
+                'data' => $submission
+                    ? new SubmissionResource($submission)
+                    : null,
+            ]);
+        } catch (\Throwable $exception) {
+            Log::error('Failed to fetch my submission.', ['error' => $exception->getMessage()]);
+
+            return response()->json([
+                'message' => 'Unable to fetch submission.',
             ], 500);
         }
     }

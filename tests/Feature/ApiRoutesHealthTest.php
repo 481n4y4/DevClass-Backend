@@ -58,6 +58,8 @@ class ApiRoutesHealthTest extends TestCase
     {
         $this->getJson('/api/my-submissions')->assertStatus(401);
 
+        $this->getJson('/api/materials/999/my-submission')->assertStatus(401);
+
         $this->getJson('/api/assignments/999/submissions')->assertStatus(401);
     }
 

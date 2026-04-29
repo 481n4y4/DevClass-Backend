@@ -71,6 +71,14 @@ class SubmissionService
             ->paginate((int) config('devclass.pagination.per_page'));
     }
 
+    public function findMySubmission(User $user, int $materialId): ?Submission
+    {
+        return Submission::where('material_id', $materialId)
+            ->where('student_id', $user->id)
+            ->with(['student', 'grade.gradedBy'])
+            ->first();
+    }
+
     public function findOrFail(int $id): Submission
     {
         $submission = Submission::find($id);
